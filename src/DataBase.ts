@@ -1,28 +1,37 @@
-import { Game, GameData } from "./Game";
+import { Game, GameData } from "./model/Game";
 import { v4 as uuidv4 } from 'uuid';
 
-export class DataBase {
-    private library: Map<string, Game> = new Map()
+export interface Identifiable {
+    id: string
+}
 
-    setExampleLibrary() {
-        this.library = new Map()
-        this.addGame({ title: "God of War", publisher: "Sony", developer: "Santa Monica Studio" })
-        this.addGame({ title: "Last of Us", publisher: "Sony", developer: "Noughty Dog" })
-        this.addGame({ title: "The Witcher 3", publisher: "CD Project Red", developer: "CD Project Red" })
-        this.addGame({ title: "Call of Duty: Modern Warfare", publisher: "Activision", developer: "Noughty Dog" })
-        this.addGame({ title: "Star Wars Jedi: Fallen Order", publisher: "Electronic Arts", developer: "Respawn Entertainment" })
-    }
+export class DataBase<T extends Identifiable> {
+    private library: Map<string, T> = new Map()
 
-    addGame(gameData: GameData) {
-        const game: Game = { id: uuidv4(), title: gameData.title, publisher: gameData.publisher, developer: gameData.developer }
-        this.library.set(game.id, game)
-    }
-
-    getGame(id: string): Game | undefined {
+    getObject(id: string): T | undefined {
         return this.library.get(id)
     }
 
-    getGames(): Game[] {
+    getAll(): T[] {
         return [ ...this.library.values() ]
+    }
+
+    upsertObject(obj: T) {
+        this.library.set(obj.id, obj)
+    }
+
+    removeAll() {
+        this.library = new Map()
+    }
+}
+
+export class GameDataBase extends DataBase<Game> {
+    setExampleLibrary() {
+        this.removeAll()
+        this.upsertObject(new Game("God of War", "Sony", "Santa Monica Studio" ))
+        this.upsertObject(new Game("Last of Us", "Sony", "Noughty Dog" ))
+        this.upsertObject(new Game("The Witcher 3", "CD Project Red", "CD Project Red"))
+        this.upsertObject(new Game("Call of Duty: Modern Warfare", "Activision", "Noughty Dog"))
+        this.upsertObject(new Game("Star Wars Jedi: Fallen Order", "Electronic Arts", "Respawn Entertainment"))
     }
 }
