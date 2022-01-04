@@ -3,7 +3,7 @@ import { GameDataBase } from "../DataBase";
 import { Game, GameData } from "../model/Game";
 
 class LibraryController {
-    private static db = LibraryController.makeDB()
+    private static db = GameDataBase.sharedDB
 
     static getAll = async (req: Request, res: Response) => {
         res.setHeader('Content-Type', 'application/json')
@@ -23,9 +23,7 @@ class LibraryController {
             LibraryController.db.upsertObject(game)
             res.end("OK")
         } else {
-            res.statusCode = 400
-            res.send()
-            // res.status(400).send()
+            res.status(400).send()
         }
     }
 
@@ -33,12 +31,6 @@ class LibraryController {
         LibraryController.db.setExampleLibrary()
         console.log("reset")
         res.end("OK")
-    }
-
-    private static makeDB(): GameDataBase {
-        const db = new GameDataBase()
-        db.setExampleLibrary()
-        return db
     }
 }
 

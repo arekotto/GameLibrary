@@ -10,4 +10,8 @@ router.get("/:id", [checkAuthToken], UserController.getOneById);
 
 router.post("/add", [checkAuthToken], UserController.add);
 
+router.post("/:userId/addGame/:gameId", [checkAuthToken], UserController.addGame);
+
+router.delete("/:userId/removeGame/:gameId", [checkAuthToken], UserController.removeGame);
+
 export default router;
