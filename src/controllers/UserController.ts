@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { DataBase } from "../DataBase";
+import { UserDataBase } from "../DataBase";
 import { User, UserData } from "../model/User";
 
 class UserController {
-    private static db = new DataBase<User>()
+    private static db = new UserDataBase()
 
     static getAll = async (req: Request, res: Response) => {
         res.setHeader('Content-Type', 'application/json')
@@ -20,12 +20,20 @@ class UserController {
         const userData: UserData = req.body as UserData
         console.log(userData.email)
         const user = new User(userData.email, userData.name, [])
-        if (user.isValid()) {
-            UserController.db.upsertObject(user)
-            res.end("OK")
-        } else {
+
+        if (!user.isValid()) {
             res.status(400).send()
+            return
+        } 
+
+        const isEmailTaken = UserController.db.getUser(user.email) != undefined
+        if (isEmailTaken) {
+            res.status(409).send({ error: 'Email alread taken' });
+            return
         }
+        
+        UserController.db.upsertObject(user)
+        res.send("OK")
     }
 }
 
