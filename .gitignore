@@ -1,3 +1,9 @@
+# build folder
+build/
+
+# js files
+*.js
+
 # Logs
 logs
 *.log
