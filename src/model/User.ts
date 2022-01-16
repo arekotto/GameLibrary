@@ -22,8 +22,7 @@ export class User {
     }
 }
 
-export interface UserData {
+export interface UserCreationData {
     email: string
     name: string
-    library: Game[]
 }
