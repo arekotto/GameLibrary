@@ -12,17 +12,4 @@ export class Game {
         this.publisher = publisher
         this.developer = developer
     }
-
-    isValid(): boolean {
-        return this.id != null 
-        && this.title != null 
-        && this.publisher != null
-        && this.developer != null
-    }
-}
-
-export interface GameCreationData {
-    title: string
-    publisher: string
-    developer: string
 }

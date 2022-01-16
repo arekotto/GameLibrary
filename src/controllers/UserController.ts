@@ -1,7 +1,8 @@
 import { GameDataBase, UserDataBase } from "../DataBase"
-import { User, UserCreationData } from "../model/User"
+import { User } from "../model/User"
 import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags } from "tsoa"
 import ApiError from "../ApiError"
+import { UserCreationData } from "../model/UserCreationData"
 
 @Route("user")
 @Tags("User")
@@ -55,11 +56,11 @@ export class UserController extends Controller {
             throw new ApiError("GameNotFound", 400, "Game does not exist.")
         }
 
-        if (user.library.includes(game)) {
+        if (user.ownsGame(game.id)) {
             throw new ApiError("GameAlreadyOwned", 409, "This user already owns this game.")
         }
 
-        user.library.push(game)
+        user.addGameToLibrary(game)
         UserController.userDB.upsertObject(user)
         this.setStatus(201)
     }
