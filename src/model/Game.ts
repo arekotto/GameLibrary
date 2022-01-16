@@ -21,7 +21,7 @@ export class Game {
     }
 }
 
-export interface GameData {
+export interface GameCreationData {
     title: string
     publisher: string
     developer: string

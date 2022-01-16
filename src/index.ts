@@ -1,5 +1,4 @@
 import express, { Response as ExResponse, Request as ExRequest, NextFunction } from "express";
-import library from "./routes/library"
 import bodyParser from "body-parser";
 import { RegisterRoutes } from "../build/routes";
 import swaggerUi from "swagger-ui-express";
@@ -13,8 +12,6 @@ const app  = express()
 app.use(express.json())
 
 const port = 8080
-
-app.use("/library", library)
 
 app.get('/', (req, res) => {
     res.end("Welcome to the game store!")

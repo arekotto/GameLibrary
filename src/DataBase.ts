@@ -1,4 +1,4 @@
-import { Game, GameData } from "./model/Game";
+import { Game } from "./model/Game";
 import { v4 as uuidv4 } from 'uuid';
 import { User } from "./model/User";
 
@@ -19,6 +19,10 @@ export class DataBase<T extends Identifiable> {
 
     upsertObject(obj: T) {
         this.objects.set(obj.id, obj)
+    }
+
+    removeObject(id: string) {
+        this.objects.delete(id)
     }
 
     removeAll() {

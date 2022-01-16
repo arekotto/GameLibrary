@@ -1,9 +1,10 @@
 import { GameDataBase, UserDataBase } from "../DataBase"
 import { User, UserCreationData } from "../model/User"
-import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response } from "tsoa"
+import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags } from "tsoa"
 import ApiError from "../ApiError"
 
 @Route("user")
+@Tags("User")
 export class UserController extends Controller {
     private static userDB = UserDataBase.sharedDB
     private static gameDB = GameDataBase.sharedDB
@@ -24,14 +25,14 @@ export class UserController extends Controller {
     }
 
     @Response<ApiError>(409, "UserAlreadyExists")
-    @SuccessResponse("201", "Created")
+    @SuccessResponse(201, "Created")
     @Post("addTest")
     async addTestUser(): Promise<User> {
         return this.addNewUser({ email: "test@test.com", name: "Test User" }, "35e2d8c8-aa8f-4ffc-9770-f1d49817d4d9")
     }
 
     @Response<ApiError>(409, "UserAlreadyExists")
-    @SuccessResponse("201", "Created")
+    @SuccessResponse(201, "Created")
     @Post("add")
     async add(@Body() creationData: UserCreationData): Promise<User> {
         return this.addNewUser(creationData)
@@ -40,7 +41,7 @@ export class UserController extends Controller {
     @Response<ApiError>(404, "UserNotFound")
     @Response<ApiError>(400, "GameNotFound")
     @Response<ApiError>(409, "GameAlreadyOwned")
-    @SuccessResponse("201", "Created")
+    @SuccessResponse(201, "Created")
     @Post("{userId}/addGame")
     async addGame(@Path() userId: string, @Query() gameId: string): Promise<void> {
 
@@ -65,7 +66,7 @@ export class UserController extends Controller {
 
     @Response<ApiError>(404, "UserNotFound")
     @Response<ApiError>(409, "GameNotOwned")
-    @SuccessResponse("204", "Removed")
+    @SuccessResponse(204, "Removed")
     @Delete("{userId}/removeGame")
     async removeGame(@Path() userId: string, @Query() gameId: string): Promise<void> {
 
