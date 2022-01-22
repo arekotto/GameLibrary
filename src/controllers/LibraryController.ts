@@ -1,6 +1,6 @@
 import { GameDataBase } from "../DataBase";
 import { Game } from "../model/Game";
-import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags } from "tsoa"
+import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags, Security } from "tsoa"
 import ApiError from "../ApiError"
 import { GameCreationData } from "../model/GameCreationData";
 
@@ -26,6 +26,7 @@ export class LibraryController extends Controller {
 
     @SuccessResponse(201, "Created")
     @Post("add")
+    @Security("api_key")
     async add(@Body() creationData: GameCreationData): Promise<Game> {
         const game = new Game(creationData.title, creationData.publisher, creationData.developer)
         LibraryController.db.upsertObject(game)
@@ -36,6 +37,7 @@ export class LibraryController extends Controller {
     @Response<ApiError>(404, "GameNotFound")
     @SuccessResponse(204, "Removed")
     @Delete("remove")
+    @Security("api_key")
     async removeGame(@Query() gameId: string): Promise<void> {
 
         const game = LibraryController.db.getObject(gameId)
@@ -49,6 +51,7 @@ export class LibraryController extends Controller {
 
     @SuccessResponse(204, "Removed")
     @Delete("reset")
+    @Security("api_key")
     async reset(): Promise<void> {
         LibraryController.db.setExampleLibrary()
         console.log("reset")
