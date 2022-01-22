@@ -1,11 +1,12 @@
 import { GameDataBase, UserDataBase } from "../DataBase"
 import { User } from "../model/User"
-import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags } from "tsoa"
+import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags, Security } from "tsoa"
 import ApiError from "../ApiError"
 import { UserCreationData } from "../model/UserCreationData"
 
 @Route("user")
 @Tags("User")
+@Security("api_key")
 export class UserController extends Controller {
     private static userDB = UserDataBase.sharedDB
     private static gameDB = GameDataBase.sharedDB
