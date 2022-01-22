@@ -1,4 +1,4 @@
-import { Game, GameData } from "./model/Game";
+import { Game } from "./model/Game";
 import { v4 as uuidv4 } from 'uuid';
 import { User } from "./model/User";
 
@@ -21,6 +21,10 @@ export class DataBase<T extends Identifiable> {
         this.objects.set(obj.id, obj)
     }
 
+    removeObject(id: string) {
+        this.objects.delete(id)
+    }
+
     removeAll() {
         this.objects = new Map()
     }
@@ -32,11 +36,11 @@ export class GameDataBase extends DataBase<Game> {
 
     setExampleLibrary() {
         this.removeAll()
-        this.upsertObject(new Game("God of War", "Sony", "Santa Monica Studio" ))
-        this.upsertObject(new Game("Last of Us", "Sony", "Noughty Dog" ))
-        this.upsertObject(new Game("The Witcher 3", "CD Project Red", "CD Project Red"))
-        this.upsertObject(new Game("Call of Duty: Modern Warfare", "Activision", "Noughty Dog"))
-        this.upsertObject(new Game("Star Wars Jedi: Fallen Order", "Electronic Arts", "Respawn Entertainment"))
+        this.upsertObject(new Game("God of War", "Sony", "Santa Monica Studio", "35e2d8c8-aa8f-4ffc-9770-f1d49817d4d9"))
+        this.upsertObject(new Game("Last of Us", "Sony", "Noughty Dog", "5b2dc89c-cf02-4cb4-9017-8123f2de67d9" ))
+        this.upsertObject(new Game("The Witcher 3", "CD Project Red", "CD Project Red", "2d8f5299-6a17-4faa-b2c5-12db47f1d37b"),)
+        this.upsertObject(new Game("Call of Duty: Modern Warfare", "Activision", "Noughty Dog", "644afd16-f233-4764-b4d5-21f615dedf87"))
+        this.upsertObject(new Game("Star Wars Jedi: Fallen Order", "Electronic Arts", "Respawn Entertainment", "a5ea9685-c388-4ffa-b880-7e0a4532eb58"))
     }
 
     private static makeDB(): GameDataBase {

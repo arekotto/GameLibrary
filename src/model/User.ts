@@ -1,29 +1,27 @@
 import { Game } from "./Game";
 import { v4 as uuidv4 } from 'uuid';
+import { UserGame } from "./UserGame";
 
 export class User {
     id: string
     email: string
     name: string
-    library: Game[]
+    dateCreated: Date
+    library: UserGame[]
 
-    constructor(email: string, name: string, library: Game[], id?: string) {
-        this.id = id != null ? id : uuidv4()
+    constructor(email: string, name: string, library: UserGame[], id: string = uuidv4(), dateCreated: Date = new Date() ) {
+        this.id = id
         this.email = email
         this.name = name 
         this.library = library
+        this.dateCreated = dateCreated
     }
 
-    isValid(): boolean {
-        return this.id != null 
-        && this.email != null 
-        && this.name != null
-        && this.library != null
+    ownsGame(id: string): boolean {
+        return this.library.findIndex(game => game.id == id) != -1
     }
-}
 
-export interface UserData {
-    email: string
-    name: string
-    library: Game[]
+    addGameToLibrary(game: Game) {
+        this.library.push(new UserGame(game.id, game.title, game.publisher, game.developer))
+    }
 }

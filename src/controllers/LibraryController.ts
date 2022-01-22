@@ -1,37 +1,60 @@
-import { Request, Response } from "express";
 import { GameDataBase } from "../DataBase";
-import { Game, GameData } from "../model/Game";
+import { Game } from "../model/Game";
+import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags, Security } from "tsoa"
+import ApiError from "../ApiError"
+import { GameCreationData } from "../model/GameCreationData";
 
-class LibraryController {
+@Route("library")
+@Tags("Glogal Library")
+export class LibraryController extends Controller {
     private static db = GameDataBase.sharedDB
 
-    static getAll = async (req: Request, res: Response) => {
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(LibraryController.db.getAll()))
+    @Get()
+    async getAll(): Promise<Game[]> {
+        return LibraryController.db.getAll()
     }
 
-    static getOneById = async (req: Request, res: Response) => {
-        res.setHeader('Content-Type', 'application/json')
-        const game = LibraryController.db.getObject(req.params.id)
-        res.end(JSON.stringify(game))
-    }
-
-    static add = async (req: Request, res: Response) => {
-        const gameData: GameData = req.body as GameData
-        const game = new Game(gameData.title, gameData.publisher, gameData.developer)
-        if (game.isValid()) {
-            LibraryController.db.upsertObject(game)
-            res.end("OK")
-        } else {
-            res.status(400).send()
+    @Response<ApiError>(409, "GameNotFound")
+    @Get("{gameId}")
+    async getOneById(@Path() gameId: string): Promise<Game> {
+        const game = LibraryController.db.getObject(gameId)
+        if (game == null) {
+            throw new ApiError("GameNotFound", 404, "Game not found.")
         }
+        return game
     }
 
-    static reset = async (req: Request, res: Response) => {
+    @SuccessResponse(201, "Created")
+    @Post("add")
+    @Security("api_key")
+    async add(@Body() creationData: GameCreationData): Promise<Game> {
+        const game = new Game(creationData.title, creationData.publisher, creationData.developer)
+        LibraryController.db.upsertObject(game)
+        this.setStatus(201)
+        return game
+    }
+
+    @Response<ApiError>(404, "GameNotFound")
+    @SuccessResponse(204, "Removed")
+    @Delete("remove")
+    @Security("api_key")
+    async removeGame(@Query() gameId: string): Promise<void> {
+
+        const game = LibraryController.db.getObject(gameId)
+        if (game == undefined) {
+            throw new ApiError("GameNotFound", 404, "Game does not exist.")
+        }
+
+        LibraryController.db.removeObject(game.id)
+        this.setStatus(204)
+    }
+
+    @SuccessResponse(204, "Removed")
+    @Delete("reset")
+    @Security("api_key")
+    async reset(): Promise<void> {
         LibraryController.db.setExampleLibrary()
         console.log("reset")
-        res.end("OK")
+        this.setStatus(201)
     }
 }
-
-export default LibraryController

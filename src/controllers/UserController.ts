@@ -1,86 +1,103 @@
-import { Request, Response } from "express";
-import { GameDataBase, UserDataBase } from "../DataBase";
-import { User, UserData } from "../model/User";
-import LibraryController from "./LibraryController";
+import { GameDataBase, UserDataBase } from "../DataBase"
+import { User } from "../model/User"
+import { Body, Controller, Get, Path, Post, Delete, Query, Route, SuccessResponse, Response, Tags, Security } from "tsoa"
+import ApiError from "../ApiError"
+import { UserCreationData } from "../model/UserCreationData"
 
-class UserController {
+@Route("user")
+@Tags("User")
+@Security("api_key")
+export class UserController extends Controller {
     private static userDB = UserDataBase.sharedDB
     private static gameDB = GameDataBase.sharedDB
 
-    static getAll = async (req: Request, res: Response) => {
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(UserController.userDB.getAll()))
+    @Get()
+    async getAll(): Promise<User[]> {
+        return UserController.userDB.getAll()
     }
 
-    static getOneById = async (req: Request, res: Response) => {
-        res.setHeader('Content-Type', 'application/json')
-        const user = UserController.userDB.getObject(req.params.id)
-        res.end(JSON.stringify(user))
+    @Response<ApiError>(409, "UserNotFound")
+    @Get("{userId}")
+    async getOneById(@Path() userId: string): Promise<User> {
+        const user = UserController.userDB.getObject(userId)
+        if (user == null) {
+            throw new ApiError("UserNotFound", 404, "User not found.")
+        }
+        return user
     }
 
-    static add = async (req: Request, res: Response) => {
-        const userData: UserData = req.body as UserData
-        console.log(userData.email)
-        const user = new User(userData.email, userData.name, [])
+    @Response<ApiError>(409, "UserAlreadyExists")
+    @SuccessResponse(201, "Created")
+    @Post("addTest")
+    async addTestUser(): Promise<User> {
+        return this.addNewUser({ email: "test@test.com", name: "Test User" }, "35e2d8c8-aa8f-4ffc-9770-f1d49817d4d9")
+    }
 
-        if (!user.isValid()) {
-            res.status(400).send()
-            return
-        } 
+    @Response<ApiError>(409, "UserAlreadyExists")
+    @SuccessResponse(201, "Created")
+    @Post("add")
+    async add(@Body() creationData: UserCreationData): Promise<User> {
+        return this.addNewUser(creationData)
+    }
+
+    @Response<ApiError>(404, "UserNotFound")
+    @Response<ApiError>(400, "GameNotFound")
+    @Response<ApiError>(409, "GameAlreadyOwned")
+    @SuccessResponse(201, "Created")
+    @Post("{userId}/addGame")
+    async addGame(@Path() userId: string, @Query() gameId: string): Promise<void> {
+
+        const user = UserController.userDB.getObject(userId)
+        if (user == undefined) {
+            throw new ApiError("UserNotFound", 404, "User does not exist.")
+        }
+
+        const game = UserController.gameDB.getObject(gameId)
+        if (game == undefined) {
+            throw new ApiError("GameNotFound", 400, "Game does not exist.")
+        }
+
+        if (user.ownsGame(game.id)) {
+            throw new ApiError("GameAlreadyOwned", 409, "This user already owns this game.")
+        }
+
+        user.addGameToLibrary(game)
+        UserController.userDB.upsertObject(user)
+        this.setStatus(201)
+    }
+
+    @Response<ApiError>(404, "UserNotFound")
+    @Response<ApiError>(409, "GameNotOwned")
+    @SuccessResponse(204, "Removed")
+    @Delete("{userId}/removeGame")
+    async removeGame(@Path() userId: string, @Query() gameId: string): Promise<void> {
+
+        const user = UserController.userDB.getObject(userId)
+        if (user == undefined) {
+            throw new ApiError("UserNotFound", 404, "User does not exist.")
+        }
+
+        const removedGameIndex = user.library.findIndex(game => game.id == gameId)
+        if (removedGameIndex == -1) {
+            throw new ApiError("GameNotOwned", 404, "User does not own this game.")
+        }
+
+        user.library.splice(removedGameIndex, 1)
+        UserController.userDB.upsertObject(user)
+        this.setStatus(204)
+    }
+
+    private async addNewUser(creationData: UserCreationData, suggestedId?: string): Promise<User> {
+        console.log(creationData.email)
+        const user = new User(creationData.email, creationData.name, [], suggestedId)
 
         const isEmailTaken = UserController.userDB.getUser(user.email) != undefined
         if (isEmailTaken) {
-            res.status(409).send({ error: 'Email alread taken' });
-            return
+            throw new ApiError("UserAlreadyExists", 409, "User already exists.")
         }
 
         UserController.userDB.upsertObject(user)
-        res.send("OK")
-    }
-
-    static addGame = async (req: Request, res: Response) => {
-
-        const user = UserController.userDB.getObject(req.params.userId)
-        if (user == undefined) {
-            res.status(400).send({ error: "User does not exist" })
-            return
-        }
-
-        const game = UserController.gameDB.getObject(req.params.gameId)
-        if (game == undefined) {
-            res.status(400).send({ error: "Game does not exist" })
-            return
-        }
-
-        if (user.library.includes(game)) {
-            res.status(409).send({ error: 'This user already owns this game.' });
-            return
-        }
-
-        user.library.push(game)
-        UserController.userDB.upsertObject(user)
-        res.send("OK")
-    }
-
-
-    static removeGame = async (req: Request, res: Response) => {
-
-        const user = UserController.userDB.getObject(req.params.userId)
-        if (user == undefined) {
-            res.status(400).send({ error: "User does not exist" })
-            return
-        }
-
-        const removedGameIndex = user.library.findIndex(game => game.id == req.params.gameId)
-        if (removedGameIndex == -1) {
-            res.status(409).send({ error: 'This user deos not own this game.' });
-            return
-        }
-
-        user.library.splice(removedGameIndex, 1);
-        UserController.userDB.upsertObject(user)
-        res.send("OK")
+        this.setStatus(201)
+        return user
     }
 }
-
-export default UserController
