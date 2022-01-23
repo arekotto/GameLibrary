@@ -5,7 +5,7 @@ import ApiError from "../ApiError"
 import { GameCreationData } from "../model/GameCreationData";
 
 @Route("library")
-@Tags("Glogal Library")
+@Tags("Global Library")
 export class LibraryController extends Controller {
     private static db = GameDataBase.sharedDB
 
